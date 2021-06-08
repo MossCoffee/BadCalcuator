@@ -139,5 +139,8 @@ int_model.compile(
     metrics=['accuracy'])
 history = int_model.fit(int_train_ds, validation_data=int_val_ds, epochs=5)
 
-print("Linear model on binary vectorized data:")
-print(binary_model.summary())
+binary_loss, binary_accuracy = binary_model.evaluate(binary_test_ds)
+int_loss, int_accuracy = int_model.evaluate(int_test_ds)
+
+print("Binary model accuracy: {:2.2%}".format(binary_accuracy))
+print("Int model accuracy: {:2.2%}".format(int_accuracy))

@@ -17,12 +17,13 @@ def generateNeuralNetDataCSV(n, name):
 
 def generateNeuralNetDataFileStructure(n, name):
     #* Number of equations to generate 
-    num = 10
+    num = 100000
     bounds = 20
     #* for loop
-    os.mkdir(name)
+    direct = "F:/"+name
+    os.mkdir(direct)
     for i in range(1, n + 1):
-        path = name + "/" + str(i)
+        path = direct + "/" + str(i)
         os.mkdir(path)
         path += "/"
         for j in range(1, num + 1):
