@@ -17,8 +17,8 @@ def generateNeuralNetDataCSV(n, name):
 
 def generateNeuralNetDataFileStructure(n, name):
     #* Number of equations to generate 
-    num = 100000
-    bounds = 20
+    num = 25000
+    bounds = 100
     #* for loop
     direct = "F:/"+name
     os.mkdir(direct)
@@ -28,7 +28,7 @@ def generateNeuralNetDataFileStructure(n, name):
         path += "/"
         for j in range(1, num + 1):
             with open(path + str(j) + ".txt", "x") as f:
-                f.write(generateEquation(i,random.randint(2,j+2),bounds))    
+                f.write(generateEquation(i,random.randint(2,(j%10)+2),bounds))    
     return
 
 #* Takes in a value and n, spits out a set of n equations with solution value
