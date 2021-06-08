@@ -103,8 +103,9 @@ def getNumberForMult(prevNum):
 
 def main():
     anw = 10
+    generateNeuralNetDataFileStructure(anw, "train")
+    generateNeuralNetDataFileStructure(anw, "validate")
     generateNeuralNetDataFileStructure(anw, "test")
-   # generateNeuralNetData(anw, "train")
 
 if __name__ == "__main__":
     main()
