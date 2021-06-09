@@ -1,21 +1,9 @@
 # Bad calcuator
-#* TODO: read in text from text files
-# https://www.tensorflow.org/tutorials/load_data/csv
-# The pipeline for a text model might involve extracting symbols from raw text data, converting them to embedding identifiers with a lookup table, and batching together sequences of different lengths. 
-# Neural net?
-#* TODO: Do a flip (a neural net)
-#* TODO: Output ints
-
-#Clip: I need you to appreciate just how complicatated this 
-# is for a first time user - and this documentation is
-# abnormally good. 
-
-# Conceptually neural nets are super simple. 
-# This is a disaster nightmare trainwreck 
 import collections
 import pathlib
 import re
 import string
+import os
 # TensorFlow and tf.keras
 import tensorflow as tf 
 from tensorflow.keras import layers
@@ -37,7 +25,7 @@ def plot_graphs(history, metric):
   plt.ylabel(metric)
   plt.legend([metric, 'val_'+metric])
 
-base_dir = 'C:/Programming/BadCalcuator/'
+base_dir = 'F:/'
 train_dir = base_dir + 'train'
 
 batch_size = 32
@@ -60,11 +48,6 @@ raw_test_ds = preprocessing.text_dataset_from_directory(
 
 #Setting up the text processing
 VOCAB_SIZE = 10000
-
-binary_vectorize_layer = TextVectorization(
-    max_tokens=VOCAB_SIZE,
-    output_mode='binary')
-
 MAX_SEQUENCE_LENGTH = 250
 
 int_vectorize_layer = TextVectorization(
@@ -75,7 +58,6 @@ int_vectorize_layer = TextVectorization(
 
 # Make a text-only dataset (without labels), then call adapt
 train_text = raw_train_ds.map(lambda text, labels: text)
-binary_vectorize_layer.adapt(train_text)
 int_vectorize_layer.adapt(train_text)
 
 
@@ -89,10 +71,6 @@ def int_vectorize_text(text, label):
   return int_vectorize_layer(text), label
 
 
-binary_train_ds = raw_train_ds.map(binary_vectorize_text)
-binary_val_ds = raw_val_ds.map(binary_vectorize_text)
-binary_test_ds = raw_test_ds.map(binary_vectorize_text)
-
 int_train_ds = raw_train_ds.map(int_vectorize_text)
 int_val_ds = raw_val_ds.map(int_vectorize_text)
 int_test_ds = raw_test_ds.map(int_vectorize_text)
@@ -104,23 +82,11 @@ AUTOTUNE = tf.data.AUTOTUNE
 def configure_dataset(dataset):
   return dataset.cache().prefetch(buffer_size=AUTOTUNE)
 
-binary_train_ds = configure_dataset(binary_train_ds)
-binary_val_ds = configure_dataset(binary_val_ds)
-binary_test_ds = configure_dataset(binary_test_ds)
-
 int_train_ds = configure_dataset(int_train_ds)
 int_val_ds = configure_dataset(int_val_ds)
 int_test_ds = configure_dataset(int_test_ds)
 
 #the actual training - who knows what this actually does
-binary_model = tf.keras.Sequential([layers.Dense(10)])
-binary_model.compile(
-    loss=losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer='adam',
-    metrics=['accuracy'])
-history = binary_model.fit(
-    binary_train_ds, validation_data=binary_val_ds, epochs=10)
-###
 
 def create_model(vocab_size, num_labels):
   model = tf.keras.Sequential([
@@ -133,14 +99,33 @@ def create_model(vocab_size, num_labels):
 
 # vocab_size is VOCAB_SIZE + 1 since 0 is used additionally for padding.
 int_model = create_model(vocab_size=VOCAB_SIZE + 1, num_labels=10)
+
+checkpoint_path = "BadCalc/cp.ckpt"
+checkpoint_dir = os.path.dirname(checkpoint_path)
+
+cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
+                                                 save_weights_only=True,
+                                                 verbose=1)
+
 int_model.compile(
     loss=losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer='adam',
-    metrics=['accuracy'])
+    metrics=['accuracy'],
+    callbacks=[cp_callback])
 history = int_model.fit(int_train_ds, validation_data=int_val_ds, epochs=5)
 
-binary_loss, binary_accuracy = binary_model.evaluate(binary_test_ds)
 int_loss, int_accuracy = int_model.evaluate(int_test_ds)
 
-print("Binary model accuracy: {:2.2%}".format(binary_accuracy))
 print("Int model accuracy: {:2.2%}".format(int_accuracy))
+
+#Reload Code
+# Create a basic model instance
+model = create_model()
+
+# Loads the weights
+model.load_weights(checkpoint_path)
+
+# Re-evaluate the model
+loss, acc = model.evaluate(int_test_ds)
+print("Restored model, accuracy: {:5.2f}%".format(100 * acc))
+#save model
